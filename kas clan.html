@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Clan Manager</title>
+<style>
+:root {
+  --bg: #0b1020; --bg-2: #121933; --panel: #161e3c; --panel-2: #1c2650;
+  --border: #26315e; --text: #e6ebff; --muted: #8a94b8;
+  --primary: #4f7cff; --primary-2: #6b8fff; --success: #22c55e;
+  --danger: #ef4444; --warning: #f59e0b; --info: #38bdf8;
+  --radius: 12px; --radius-sm: 8px;
+  --shadow: 0 10px 30px rgba(0,0,0,0.35);
+  --font: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { font-family: var(--font); background: radial-gradient(1200px 600px at 10% -10%, #1a2550 0%, var(--bg) 55%); color: var(--text); font-size: 14px; line-height: 1.5; min-height: 100vh; }
+a { color: var(--primary-2); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.hidden { display: none !important; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px; border-radius: var(--radius-sm); border: 1px solid transparent; background: var(--panel-2); color: var(--text); cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit; transition: 0.15s; }
+.btn:hover { filter: brightness(1.1); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-2); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-success { background: var(--success); color: #fff; }
+.btn-warning { background: var(--warning); color: #111; }
+.btn-ghost { background: transparent; border-color: var(--border); color: var(--muted); }
+.btn-ghost:hover { color: var(--text); border-color: var(--primary); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-block { width: 100%; }
+input, select, textarea { width: 100%; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--bg-2); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 13px; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,124,255,0.15); }
+label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+label > input, label > select, label > textarea { margin-top: 6px; text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--text); }
+
+.auth-view { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.auth-card { width: 100%; max-width: 420px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; box-shadow: var(--shadow); }
+.brand { text-align: center; margin-bottom: 24px; }
+.brand-logo { width: 56px; height: 56px; border-radius: 14px; margin: 0 auto 12px; background: linear-gradient(135deg, var(--primary), #8b5cf6); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; color: #fff; }
+.brand h1 { font-size: 22px; margin-bottom: 4px; }
+.auth-form { display: flex; flex-direction: column; }
+.auth-links { display: flex; justify-content: space-between; margin-top: 14px; font-size: 13px; }
+.auth-message { margin-top: 16px; padding: 10px 12px; border-radius: var(--radius-sm); background: rgba(79,124,255,0.1); border: 1px solid rgba(79,124,255,0.3); font-size: 13px; }
+.auth-message.error { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+.auth-message.success { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.4); color: #86efac; }
+
+.app-view { display: flex; min-height: 100vh; }
+.sidebar { width: 240px; background: var(--panel); border-right: 1px solid var(--border); padding: 20px 14px; display: flex; flex-direction: column; flex-shrink: 0; position: sticky; top: 0; height: 100vh; }
+.sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 0 8px 20px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+.sidebar-brand .brand-logo { width: 40px; height: 40px; font-size: 15px; margin: 0; border-radius: 10px; }
+.sidebar-title { font-weight: 700; font-size: 14px; }
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); color: var(--muted); cursor: pointer; font-size: 13px; font-weight: 500; transition: 0.15s; }
+.nav-item:hover { background: var(--panel-2); color: var(--text); }
+.nav-item.active { background: var(--primary); color: #fff; }
+.sidebar-footer { padding-top: 12px; border-top: 1px solid var(--border); }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { display: flex; align-items: center; gap: 12px; padding: 16px 24px; border-bottom: 1px solid var(--border); background: rgba(11,16,32,0.6); backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 10; }
+.topbar h2 { font-size: 17px; }
+.burger { display: none; }
+.content { padding: 24px; flex: 1; overflow-x: hidden; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.stat-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; transition: 0.15s; }
+.stat-card:hover { border-color: var(--primary); }
+.stat-label { color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.stat-value { font-size: 22px; font-weight: 700; }
+.stat-value.primary { color: var(--primary-2); }
+.stat-value.success { color: var(--success); }
+.stat-value.danger { color: var(--danger); }
+.stat-value.warning { color: var(--warning); }
+.panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 12px; flex-wrap: wrap; }
+.panel-title { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+.table-wrap { overflow-x: auto; margin: -8px -8px; padding: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 520px; }
+th { text-align: left; padding: 10px 12px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); font-weight: 700; }
+td { padding: 10px 12px; border-bottom: 1px solid rgba(38, 49, 94, 0.5); }
+tr:hover td { background: rgba(28, 38, 80, 0.3); }
+.empty-row td { text-align: center; color: var(--muted); padding: 24px; }
+
+.badge { display: inline-block; padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+.badge-success { background: rgba(34,197,94,0.15); color: #86efac; }
+.badge-danger { background: rgba(239,68,68,0.15); color: #fca5a5; }
+.badge-warning { background: rgba(245,158,11,0.15); color: #fcd34d; }
+.badge-info { background: rgba(56,189,248,0.15); color: #7dd3fc; }
+.badge-muted { background: rgba(138,148,184,0.15); color: var(--muted); }
+
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 100; }
+.modal { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 520px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: var(--shadow); }
+.modal-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.modal-head h3 { font-size: 15px; }
+.modal-body { padding: 20px; overflow-y: auto; }
+
+.toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 18px; border-radius: var(--radius-sm); background: var(--panel-2); border: 1px solid var(--border); color: var(--text); font-size: 13px; font-weight: 600; box-shadow: var(--shadow); z-index: 200; max-width: 320px; }
+.toast.success { background: rgba(34,197,94,0.2); border-color: var(--success); color: #86efac; }
+.toast.error { background: rgba(239,68,68,0.2); border-color: var(--danger); color: #fca5a5; }
+
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px; overflow-x: auto; }
+.tab { padding: 10px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; white-space: nowrap; }
+.tab.active { color: var(--text); border-bottom-color: var(--primary); }
+
+.loading { text-align: center; padding: 40px; color: var(--muted); }
+.spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 900px) {
+  .sidebar { position: fixed; left: 0; top: 0; z-index: 50; transform: translateX(-100%); transition: transform 0.2s; box-shadow: var(--shadow); }
+  .sidebar.open { transform: translateX(0); }
+  .burger { display: inline-flex; }
+  .content { padding: 16px; }
+  .topbar { padding: 12px 16px; }
+}
+@media (max-width: 480px) {
+  .auth-card { padding: 24px; }
+  .stat-value { font-size: 18px; }
+  .modal-body { padding: 16px; }
+  th, td { padding: 8px 10px; }
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="authView" class="auth-view">
+  <div class="auth-card">
+    <div class="brand">
+      <div class="brand-logo">CM</div>
+      <h1>Clan Manager</h1>
+      <p class="muted" id="authSubtitle">Masuk untuk melanjutkan</p>
+    </div>
+    <form id="loginForm" class="auth-form">
+      <label>Email <input type="email" id="loginEmail" required autocomplete="email" /></label>
+      <label>Password <input type="password" id="loginPassword" required minlength="6" autocomplete="current-password" /></label>
+      <button type="submit" class="btn btn-primary btn-block" id="loginBtn">Masuk</button>
+      <div class="auth-links">
+        <a href="#" id="toRegister">Daftar akun</a>
+        <a href="#" id="toForgot">Lupa password?</a>
+      </div>
+    </form>
+    <form id="registerForm" class="auth-form hidden">
+      <label>Nama Tampilan <input type="text" id="regName" required minlength="2" maxlength="40" /></label>
+      <label>Username Game / Discord <input type="text" id="regUsername" required minlength="2" maxlength="40" /></label>
+      <label>Email <input type="email" id="regEmail" required autocomplete="email" /></label>
+      <label>Password <input type="password" id="regPassword" required minlength="6" autocomplete="new-password" /></label>
+      <button type="submit" class="btn btn-primary btn-block" id="registerBtn">Daftar</button>
+      <div class="auth-links"><a href="#" id="toLoginFromReg">Sudah punya akun? Masuk</a></div>
+    </form>
+    <form id="forgotForm" class="auth-form hidden">
+      <label>Email <input type="email" id="forgotEmail" required autocomplete="email" /></label>
+      <button type="submit" class="btn btn-primary btn-block" id="forgotBtn">Kirim Link Reset</button>
+      <div class="auth-links"><a href="#" id="toLoginFromForgot">Kembali ke login</a></div>
+    </form>
+    <div id="authMessage" class="auth-message hidden"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appView" class="app-view hidden">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">CM</div>
+      <div>
+        <div class="sidebar-title">Clan Manager</div>
+        <div class="muted small" id="sidebarRole">—</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+    <div class="sidebar-footer">
+      <div class="muted small" id="sidebarUser">—</div>
+      <button class="btn btn-ghost btn-block" id="logoutBtn">Keluar</button>
+    </div>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <button class="btn btn-ghost burger" id="burgerBtn" aria-label="Menu">☰</button>
+      <h2 id="pageTitle">Dashboard</h2>
+    </header>
+    <section class="content" id="content"></section>
+  </main>
+</div>
+
+<div id="modalBackdrop" class="modal-backdrop hidden">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <h3 id="modalTitle">Form</h3>
+      <button class="btn btn-ghost" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script type="module">
+// =====================================================================
+// FIREBASE CONFIG — diambil dari project xii-tjkt-3
+// Data clan disimpan di root "clanManager/" agar tidak menabrak data kelas
+// =====================================================================
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDxiDzk0n4VB9AqqT49sJxn8NDY3ktOf2s",
+  authDomain: "xii-tjkt-3.firebaseapp.com",
+  databaseURL: "https://xii-tjkt-3-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "xii-tjkt-3",
+  storageBucket: "xii-tjkt-3.firebasestorage.app",
+  messagingSenderId: "241956035753",
+  appId: "1:241956035753:web:c712603315b474c5909db8"
+};
+const ROOT = "clanManager";
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, get, set, update, push, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const app = initializeApp(FIREBASE_CONFIG);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+// ============ STATE ============
+const state = {
+  user: null, profile: null, page: "dashboard",
+  listeners: [], data: {
+    users:{}, dues:{}, payments:{}, transactions:{},
+    giveaways:{}, rotations:{}, announcements:{}, joinRequests:{}, settings:{}
+  }
+};
+
+// ============ UTIL ============
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+const rupiah = n => "Rp"+Number(n||0).toLocaleString("id-ID");
+const fmtDate = ts => ts ? new Date(ts).toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"}) : "-";
+const monthKey = (d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+const monthLabel = key => {
+  const [y,m] = key.split("-");
+  const n = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  return `${n[parseInt(m)-1]} ${y}`;
+};
+function toast(msg,type="success"){
+  const el=$("#toast"); el.textContent=msg; el.className=`toast ${type}`; el.classList.remove("hidden");
+  clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.add("hidden"),2800);
+}
+function openModal(title,bodyHTML,onSubmit){
+  $("#modalTitle").textContent=title; $("#modalBody").innerHTML=bodyHTML;
+  $("#modalBackdrop").classList.remove("hidden");
+  const f=$("#modalBody form");
+  if(f&&onSubmit){ f.addEventListener("submit",async e=>{ e.preventDefault(); try{ await onSubmit(new FormData(f)); }catch(err){ toast(err.message||"Error","error"); } }); }
+  $("#modalClose").onclick=closeModal;
+}
+function closeModal(){ $("#modalBackdrop").classList.add("hidden"); $("#modalBody").innerHTML=""; }
+function fileToBase64(file){
+  return new Promise((res,rej)=>{
+    if(file.size>500*1024) return rej(new Error("Maks 500 KB"));
+    if(!/^image\/(png|jpe?g|webp)$/.test(file.type)) return rej(new Error("Format JPG/PNG/WEBP"));
+    const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>rej(new Error("Gagal baca file")); r.readAsDataURL(file);
+  });
+}
+function addListener(u){ state.listeners.push(u); }
+function clearListeners(){ state.listeners.forEach(u=>{try{u()}catch{}}); state.listeners=[]; }
+
+// ============ AUTH ============
+const authView=$("#authView"), appView=$("#appView");
+function showAuthMessage(msg,type=""){ const el=$("#authMessage"); el.className=`auth-message ${type}`; el.textContent=msg; el.classList.remove("hidden"); setTimeout(()=>el.classList.add("hidden"),5000); }
+function switchAuthForm(w){
+  $("#loginForm").classList.toggle("hidden",w!=="login");
+  $("#registerForm").classList.toggle("hidden",w!=="register");
+  $("#forgotForm").classList.toggle("hidden",w!=="forgot");
+  $("#authSubtitle").textContent = w==="login"?"Masuk untuk melanjutkan":w==="register"?"Buat akun baru":"Reset password akunmu";
+}
+$("#toRegister").onclick=e=>{e.preventDefault();switchAuthForm("register")};
+$("#toForgot").onclick=e=>{e.preventDefault();switchAuthForm("forgot")};
+$("#toLoginFromReg").onclick=e=>{e.preventDefault();switchAuthForm("login")};
+$("#toLoginFromForgot").onclick=e=>{e.preventDefault();switchAuthForm("login")};
+
+$("#loginForm").addEventListener("submit",async e=>{
+  e.preventDefault(); const b=$("#loginBtn"); b.disabled=true; b.textContent="Memuat...";
+  try{ await signInWithEmailAndPassword(auth,$("#loginEmail").value.trim(),$("#loginPassword").value); }
+  catch(err){ showAuthMessage(friendlyAuthError(err),"error"); }
+  finally{ b.disabled=false; b.textContent="Masuk"; }
+});
+
+$("#registerForm").addEventListener("submit",async e=>{
+  e.preventDefault(); const b=$("#registerBtn"); b.disabled=true; b.textContent="Memuat...";
+  try{
+    const name=$("#regName").value.trim(), username=$("#regUsername").value.trim(), email=$("#regEmail").value.trim(), pass=$("#regPassword").value;
+    if(name.length<2) throw new Error("Nama minimal 2 karakter");
+    if(username.length<2) throw new Error("Username minimal 2 karakter");
+    if(pass.length<6) throw new Error("Password minimal 6 karakter");
+    const cred=await createUserWithEmailAndPassword(auth,email,pass);
+    await set(ref(db,`${ROOT}/users/${cred.user.uid}`),{
+      email,displayName:name,usernameGame:username,role:"member",status:"active",membershipStatus:"pending",createdAt:Date.now()
+    });
+    await set(ref(db,`${ROOT}/joinRequests/${cred.user.uid}`),{
+      uid:cred.user.uid,displayName:name,usernameGame:username,status:"pending",createdAt:Date.now()
+    });
+    showAuthMessage("Akun dibuat! Menunggu persetujuan Leader.","success");
+  }catch(err){ showAuthMessage(friendlyAuthError(err),"error"); }
+  finally{ b.disabled=false; b.textContent="Daftar"; }
+});
+
+$("#forgotForm").addEventListener("submit",async e=>{
+  e.preventDefault(); const b=$("#forgotBtn"); b.disabled=true; b.textContent="Mengirim...";
+  try{ await sendPasswordResetEmail(auth,$("#forgotEmail").value.trim()); showAuthMessage("Link reset dikirim. Cek email.","success"); }
+  catch(err){ showAuthMessage(friendlyAuthError(err),"error"); }
+  finally{ b.disabled=false; b.textContent="Kirim Link Reset"; }
+});
+
+function friendlyAuthError(err){
+  const map={
+    "auth/invalid-email":"Email tidak valid.","auth/user-not-found":"Akun tidak ditemukan.","auth/wrong-password":"Password salah.",
+    "auth/invalid-credential":"Email atau password salah.","auth/email-already-in-use":"Email sudah terdaftar.",
+    "auth/weak-password":"Password terlalu lemah (min 6).","auth/too-many-requests":"Terlalu banyak percobaan.","auth/network-request-failed":"Koneksi bermasalah."
+  };
+  return map[err?.code]||err?.message||"Terjadi kesalahan.";
+}
+
+onAuthStateChanged(auth,async user=>{
+  clearListeners();
+  if(!user){ state.user=null; state.profile=null; authView.classList.remove("hidden"); appView.classList.add("hidden"); return; }
+  state.user=user;
+  try{
+    const snap=await get(ref(db,`${ROOT}/users/${user.uid}`));
+    if(!snap.exists()){ await signOut(auth); showAuthMessage("Profil tidak ditemukan.","error"); return; }
+    state.profile=snap.val();
+    if(state.profile.status==="inactive"){ await signOut(auth); showAuthMessage("Akun dinonaktifkan.","error"); return; }
+    if(state.profile.membershipStatus==="pending"&&state.profile.role==="member"){ await signOut(auth); showAuthMessage("Menunggu persetujuan Leader.","error"); return; }
+    if(state.profile.membershipStatus==="rejected"){ await signOut(auth); showAuthMessage("Permintaan ditolak.","error"); return; }
+    startApp();
+  }catch(err){ showAuthMessage("Gagal memuat profil: "+err.message,"error"); await signOut(auth); }
+});
+
+$("#logoutBtn").onclick=async()=>{ clearListeners(); await signOut(auth); };
+
+// ============ NAV ============
+const LEADER_NAV=[
+  {id:"dashboard",label:"📊 Dashboard"},{id:"members",label:"👥 Manajemen Member"},
+  {id:"joinRequests",label:"📩 Permintaan Bergabung"},{id:"dues",label:"💰 Iuran"},
+  {id:"payments",label:"✅ Verifikasi Pembayaran"},{id:"finance",label:"💵 Keuangan"},
+  {id:"giveaways",label:"🎁 Giveaway"},{id:"rotations",label:"🔄 Rotasi Admin"},
+  {id:"announcements",label:"📢 Pengumuman"},{id:"settings",label:"⚙️ Pengaturan"}
+];
+const MEMBER_NAV=[
+  {id:"dashboard",label:"🏠 Beranda"},{id:"bills",label:"💰 Iuran Saya"},
+  {id:"myGiveaway",label:"🎁 Giveaway"},{id:"announcements",label:"📢 Pengumuman"},
+  {id:"profile",label:"👤 Profil"}
+];
+const OWNER_EXTRA=[{id:"roles",label:"👑 Role & Izin"}];
+function navItems(){
+  let arr = state.profile.role==="member"?[...MEMBER_NAV]:[...LEADER_NAV];
+  if(state.profile.role==="owner") arr=[...arr,...OWNER_EXTRA];
+  return arr;
+}
+function startApp(){
+  authView.classList.add("hidden"); appView.classList.remove("hidden");
+  $("#sidebarRole").textContent=state.profile.role.toUpperCase();
+  $("#sidebarUser").textContent=state.profile.displayName;
+  state.page="dashboard";
+  const nav=$("#sidebarNav"); nav.innerHTML="";
+  navItems().forEach(item=>{
+    const el=document.createElement("div");
+    el.className="nav-item"+(state.page===item.id?" active":"");
+    el.textContent=item.label;
+    el.onclick=()=>{ state.page=item.id; $$(".nav-item").forEach(n=>n.classList.remove("active")); el.classList.add("active"); $("#sidebar").classList.remove("open"); renderPage(); };
+    nav.appendChild(el);
+  });
+  attachRealtimeListeners(); renderPage();
+}
+$("#burgerBtn").onclick=()=>$("#sidebar").classList.toggle("open");
+
+// ============ LISTENERS ============
+function attachRealtimeListeners(){
+  ["users","dues","payments","transactions","giveaways","rotations","announcements","joinRequests","settings"].forEach(p=>{
+    const unsub=onValue(ref(db,`${ROOT}/${p}`),snap=>{
+      state.data[p]=snap.val()||{};
+      if(!$("#appView").classList.contains("hidden")) renderPage();
+    },err=>console.warn("listener",p,err));
+    addListener(unsub);
+  });
+}
+
+// ============ HELPERS DATA ============
+function usersArray(){
+  return Object.entries(state.data.users||{}).map(([uid,u])=>({uid,...u}));
+}
+function activeMembers(){
+  return usersArray().filter(u=>u.status!=="inactive"&&u.role!=="owner"&&u.role!=="leader");
+}
+function allActive(){
+  return usersArray().filter(u=>u.status!=="inactive");
+}
+function getSetting(key,def){
+  const s=state.data.settings?.main||{};
+  return s[key]!==undefined?s[key]:def;
+}
+function saldo(){
+  let inc=0, exp=0;
+  Object.values(state.data.transactions||{}).forEach(t=>{
+    if(t.status!=="confirmed") return;
+    if(t.type==="income") inc+=Number(t.amount||0);
+    else if(t.type==="expense") exp+=Number(t.amount||0);
+  });
+  return { inc, exp, saldo: inc-exp };
+}
+function getDuesForMonth(mk){ return state.data.dues?.[mk]||null; }
+function getPaymentsForMonth(mk){
+  return Object.entries(state.data.payments||{})
+    .filter(([k,v])=>v.month===mk)
+    .map(([k,v])=>({id:k,...v}));
+}
+function paymentStatus(uid,mk){
+  const p=getPaymentsForMonth(mk).find(x=>x.uid===uid);
+  if(!p) return "unpaid";
+  return p.status;
+}
+
+// ============ ROUTER RENDER ============
+function renderPage(){
+  if(!state.profile) return;
+  const map={
+    dashboard: state.profile.role==="member"?renderMemberDashboard:renderLeaderDashboard,
+    members:renderMembersPage, joinRequests:renderJoinRequests,
+    dues:renderDuesPage, payments:renderPaymentsPage,
+    finance:renderFinancePage, giveaways:renderGiveawaysPage,
+    rotations:renderRotationsPage, announcements:renderAnnouncementsPage,
+    settings:renderSettingsPage, roles:renderRolesPage,
+    bills:renderMyBills, myGiveaway:renderMyGiveaway, profile:renderProfile
+  };
+  const fn=map[state.page];
+  if(!fn) return;
+  $("#pageTitle").textContent = navItems().find(x=>x.id===state.page)?.label||"Dashboard";
+  $("#content").innerHTML = fn();
+  bindActions();
+}
+
+// ============ LEADER: DASHBOARD ============
+function renderLeaderDashboard(){
+  const mk=monthKey();
+  const users=usersArray();
+  const active=users.filter(u=>u.status!=="inactive");
+  const inactive=users.filter(u=>u.status==="inactive");
+  const {inc,exp,saldo:bal}=saldo();
+  const dues=getDuesForMonth(mk);
+  const payments=getPaymentsForMonth(mk);
+  const lunas=payments.filter(p=>p.status==="approved").length;
+  const pending=payments.filter(p=>p.status==="pending").length;
+  const adminCount=active.filter(u=>u.role==="leader"||u.role==="owner").length;
+
+  return `
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">Total Member</div><div class="stat-value primary">${users.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Member Aktif</div><div class="stat-value success">${active.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Member Nonaktif</div><div class="stat-value danger">${inactive.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Total Admin</div><div class="stat-value primary">${adminCount}</div></div>
+      <div class="stat-card"><div class="stat-label">Sudah Bayar (${monthLabel(mk)})</div><div class="stat-value success">${lunas}</div></div>
+      <div class="stat-card"><div class="stat-label">Belum Bayar</div><div class="stat-value warning">${Math.max(active.length-lunas-pending,0)}</div></div>
+      <div class="stat-card"><div class="stat-label">Menunggu Verifikasi</div><div class="stat-value warning">${pending}</div></div>
+      <div class="stat-card"><div class="stat-label">Pemasukan Terkonfirmasi</
+            <div class="stat-card"><div class="stat-label">Pemasukan</div><div class="stat-value success">${rupiah(inc)}</div></div>
+      <div class="stat-card"><div class="stat-label">Pengeluaran</div><div class="stat-value danger">${rupiah(exp)}</div></div>
+      <div class="stat-card"><div class="stat-label">Saldo Kas</div><div class="stat-value primary">${rupiah(bal)}</div></div>
+      <div class="stat-card"><div class="stat-label">Dana Cadangan</div><div class="stat-value warning">${rupiah(getSetting("reserve",500000))}</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">Tagihan Bulan ${monthLabel(mk)}</div>
+        <button class="btn btn-primary btn-sm" data-action="create-dues">Buat Tagihan</button>
+      </div>
+      ${dues ? `
+        <p class="muted small">Nominal: <b>${rupiah(dues.amount)}</b> · Deadline: ${fmtDate(dues.deadline)}</p>
+      ` : `<p class="muted small">Belum ada tagihan untuk bulan ini. Klik <b>Buat Tagihan</b>.</p>`}
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">Aktivitas Terbaru</div></div>
+      ${renderRecentActivity()}
+    </div>
+  `;
+}
+function renderRecentActivity(){
+  const arr=[];
+  Object.values(state.data.payments||{}).forEach(p=>{
+    arr.push({t:p.createdAt||0,text:`Pembayaran ${p.displayName||"-"} · ${rupiah(p.amount)} · ${p.status}`});
+  });
+  Object.values(state.data.transactions||{}).forEach(t=>{
+    arr.push({t:t.createdAt||0,text:`Transaksi ${t.type==="income"?"masuk":"keluar"} ${rupiah(t.amount)} · ${t.description||"-"}`});
+  });
+  Object.values(state.data.giveaways||{}).forEach(g=>{
+    arr.push({t:g.createdAt||0,text:`Giveaway ${g.name||"-"} · ${g.status}`});
+  });
+  arr.sort((a,b)=>b.t-a.t);
+  if(!arr.length) return `<p class="muted small">Belum ada aktivitas.</p>`;
+  return `<ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">${arr.slice(0,10).map(a=>`<li class="small muted">${a.text}</li>`).join("")}</ul>`;
+}
+
+// ============ LEADER: MEMBERS ============
+function renderMembersPage(){
+  const users=usersArray();
+  return `
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">Daftar Member (${users.length})</div>
+        <button class="btn btn-primary btn-sm" data-action="add-member">+ Tambah Member</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nama</th><th>Username</th><th>Role</th><th>Status</th><th>Bergabung</th><th>Aksi</th></tr></thead>
+          <tbody>
+            ${users.length? users.map(u=>`
+              <tr>
+                <td>${u.displayName||"-"}</td>
+                <td>${u.usernameGame||"-"}</td>
+                <td><span class="badge badge-info">${u.role}</span></td>
+                <td><span class="badge ${u.status==="inactive"?"badge-danger":"badge-success"}">${u.status||"-"}</span></td>
+                <td>${fmtDate(u.createdAt)}</td>
+                <td>
+                  <button class="btn btn-ghost btn-sm" data-action="edit-member" data-uid="${u.uid}">Edit</button>
+                  ${u.role!=="owner"?`<button class="btn btn-danger btn-sm" data-action="toggle-member" data-uid="${u.uid}">${u.status==="inactive"?"Aktifkan":"Nonaktifkan"}</button>`:""}
+                </td>
+              </tr>`).join(""):`<tr class="empty-row"><td colspan="6">Belum ada member.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// ============ LEADER: JOIN REQUESTS ============
+function renderJoinRequests(){
+  const reqs=Object.entries(state.data.joinRequests||{}).map(([id,r])=>({id,...r}));
+  const pending=reqs.filter(r=>r.status==="pending");
+  return `
+    <div class="panel">
+      <div class="panel-title">Permintaan Menunggu (${pending.length})</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Nama</th><th>Username</th><th>Tanggal</th><th>Aksi</th></tr></thead>
+        <tbody>
+          ${pending.length?pending.map(r=>`
+            <tr>
+              <td>${r.displayName||"-"}</td>
+              <td>${r.usernameGame||"-"}</td>
+              <td>${fmtDate(r.createdAt)}</td>
+              <td>
+                <button class="btn btn-success btn-sm" data-action="approve-join" data-uid="${r.id}">Setujui</button>
+                <button class="btn btn-danger btn-sm" data-action="reject-join" data-uid="${r.id}">Tolak</button>
+              </td>
+            </tr>`).join(""):`<tr class="empty-row"><td colspan="4">Tidak ada permintaan baru.</td></tr>`}
+        </tbody>
+      </table></div>
+    </div>
+  `;
+}
+
+// ============ LEADER: DUES ============
+function renderDuesPage(){
+  const mk=monthKey();
+  const dues=getDuesForMonth(mk);
+  const active=allActive();
+  const payments=getPaymentsForMonth(mk);
+  return `
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">Iuran ${monthLabel(mk)}</div>
+        <button class="btn btn-primary btn-sm" data-action="create-dues">${dues?"Update Tagihan":"Buat Tagihan"}</button>
+      </div>
+      <p class="muted small">Nominal default: ${rupiah(getSetting("duesAmount",50000))} · Deadline default: tgl ${getSetting("duesDeadline",10)}</p>
+      ${dues?`<p class="small" style="margin-top:8px;">Tagihan: <b>${rupiah(dues.amount)}</b> · Deadline: ${fmtDate(dues.deadline)}</p>`:`<p class="small" style="margin-top:8px;">Belum ada tagihan bulan ini.</p>`}
+    </div>
+    <div class="panel">
+      <div class="panel-title">Status Pembayaran</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Nama</th><th>Status</th><th>Nominal</th><th>Aksi</th></tr></thead>
+        <tbody>
+          ${active.map(u=>{
+            const st=paymentStatus(u.uid,mk);
+            const p=payments.find(x=>x.uid===u.uid);
+            return `<tr>
+              <td>${u.displayName}</td>
+              <td>${badgeStatus(st)}</td>
+              <td>${p?rupiah(p.amount):"-"}</td>
+              <td>${st==="pending"?`<button class="btn btn-success btn-sm" data-action="verify-pay" data-id="${p.id}">Verifikasi</button>`:"-"}</td>
+            </tr>`;
+          }).join("")||`<tr class="empty-row"><td colspan="4">Belum ada member.</td></tr>`}
+        </tbody>
+      </table></div>
+    </div>
+  `;
+}
+function badgeStatus(st){
+  const map={unpaid:["Belum Bayar","badge-warning"],pending:["Menunggu","badge-warning"],approved:["Lunas","badge-success"],rejected:["Ditolak","badge-danger"]};
+  const [lbl,cls]=map[st]||map.unpaid;
+  return `<span class="badge ${cls}">${lbl}</span>`;
+}
+
+// ============ LEADER: PAYMENTS ============
+function renderPaymentsPage(){
+  const list=Object.entries(state.data.payments||{}).map(([id,p])=>({id,...p})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  return `
+    <div class="panel">
+      <div class="panel-title">Semua Pembayaran (${list.length})</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Member</th><th>Periode</th><th>Nominal</th><th>Status</th><th>Bukti</th><th>Aksi</th></tr></thead>
+        <tbody>
+          ${list.length?list.map(p=>`<tr>
+            <td>${p.displayName||"-"}</td>
+            <td>${p.month||"-"}</td>
+            <td>${rupiah(p.amount)}</td>
+            <td>${badgeStatus(p.status)}</td>
+            <td>${p.proof?`<a href="${p.proof}" target="_blank" class="btn btn-ghost btn-sm">Lihat</a>`:"-"}</td>
+            <td>
+              ${p.status==="pending"?`
+                <button class="btn btn-success btn-sm" data-action="verify-pay" data-id="${p.id}">Setujui</button>
+                <button class="btn btn-danger btn-sm" data-action="reject-pay" data-id="${p.id}">Tolak</button>
+              `:"-"}
+            </td>
+          </tr>`).join(""):`<tr class="empty-row"><td colspan="6">Belum ada pembayaran.</td></tr>`}
+        </tbody>
+      </table></div>
+    </div>
+  `;
+}
+
+// ============ LEADER: FINANCE ============
+function renderFinancePage(){
+  const {inc,exp,saldo:bal}=saldo();
+  const list=Object.entries(state.data.transactions||{}).map(([id,t])=>({id,...t})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  return `
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">Pemasukan</div><div class="stat-value success">${rupiah(inc)}</div></div>
+      <div class="stat-card"><div class="stat-label">Pengeluaran</div><div class="stat-value danger">${rupiah(exp)}</div></div>
+      <div class="stat-card"><div class="stat-label">Saldo Kas</div><div class="stat-value primary">${rupiah(bal)}</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">Riwayat Transaksi</div>
+        <button class="btn btn-primary btn-sm" data-action="add-tx">+ Transaksi</button>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Nominal</th><th>Status</th></tr></thead>
+        <tbody>
+          ${list.length?list.map(t=>`<tr>
+            <td>${fmtDate(t.createdAt)}</td>
+            <td><span class="badge ${t.type==="income"?"badge-success":"badge-danger"}">${t.type==="income"?"Masuk":"Keluar"}</span></td>
+            <td>${t.description||"-"}</td>
+            <td>${rupiah(t.amount)}</td>
+            <td><span class="badge badge-info">${t.status}</span></td>
+          </tr>`).join(""):`<tr class="empty-row"><td colspan="5">Belum ada transaksi.</td></tr>`}
+        </tbody>
+      </table></div>
+    </div>
+  `;
+}
+
+// ============ LEADER: GIVEAWAYS ============
+function renderGiveawaysPage(){
+  const list=Object.entries(state.data.giveaways||{}).map(([id,g])=>({id,...g})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  return `
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">Giveaway (${list.length})</div>
+        <button class="btn btn-primary btn-sm" data-action="add-giveaway">+ Giveaway</button>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Nama</th><th>Bulan</th><th>Pengirim</th><th>Budget</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody>
+          ${list.length?list.map(g=>`<tr>
+            <td>${g.name||"-"}</td>
+            <td>${g.month||"-"}</td>
+            <td>${(g.senders||[]).map(s=>s.name).join(", ")||"-"}</td>
+            <td>${rupiah(g.budget)}</td>
+            <td><span class="badge badge-info">${g.status||"planned"}</span></td>
+            <td>
+              <button class="btn btn-ghost btn-sm" data-action="edit-giveaway" data-id="${g.id}">Edit</button>
+              <button class="btn btn-success btn-sm" data-action="done-giveaway" data-id="${g.id}">Selesai</button>
+            </td>
+          </tr>`).join(""):`<tr class="empty-row"><td colspan="6">Belum ada giveaway.</td></tr>`}
+        </tbody>
+      </table></div>
+    </div>
+  `;
+}
+
+// ============ LEADER: ROTATIONS ============
+function renderRotationsPage(){
+  const rotations=state.data.rotations||{};
+  const active=activeMembers();
+  const perMonth=getSetting("sendersPerMonth",5);
+  return `
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">Rotasi Admin</div>
+        <button class="btn btn-primary btn-sm" data-action="gen-rotation">Generate Rotasi (12 Bulan)</button>
+      </div>
+      <p class="muted small">Pengirim per bulan: ${perMonth} · Total admin aktif: ${active.length}</p>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Jadwal Rotasi Tahun ${new Date().getFullYear()}</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Bulan</th><th>Pengirim</th></tr></thead>
+        <tbody>
+          ${Array.from({length:12},(_,i)=>{
+            const mk=`${new Date().getFullYear()}-${String(i+1).padStart(2,"0")}`;
+            const r=rotations[mk]||{senders:[]};
+            const names=(r.senders||[]).map(s=>s.name).join(", ")||"-";
+            return `<tr><td>${monthLabel(mk)}</td><td>${names}</td></tr>`;
+          }).join("")}
+        </tbody>
+      </table></div>
+    </div>
+  `;
+}
+
+// ============ LEADER: ANNOUNCEMENTS ============
+function renderAnnouncementsPage(){
+  const list=Object.entries(state.data.announcements||{}).map(([id,a])=>({id,...a})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  return `
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">Pengumuman</div>
+        <button class="btn btn-primary btn-sm" data-action="add-announce">+ Buat Pengumuman</button>
+      </div>
+      ${list.length?list.map(a=>`
+        <div style="border-bottom:1px solid var(--border);padding:12px 0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <b>${a.title||"-"}</b>
+            <button class="btn btn-danger btn-sm" data-action="del-announce" data-id="${a.id}">Hapus</button>
+          </div>
+          <p class="muted small">${fmtDate(a.createdAt)} · ${a.by||"-"}</p>
+          <p style="margin-top:6px;">${a.content||""}</p>
+        </div>
+      `).join(""):`<p class="muted small">Belum ada pengumuman.</p>`}
+    </div>
+  `;
+}
+
+// ============ LEADER: SETTINGS ============
+function renderSettingsPage(){
+  return `
+    <div class="panel">
+      <div class="panel-title">Pengaturan Clan</div>
+      <form id="settingsForm" style="display:grid;gap:12px;max-width:480px;margin-top:12px;">
+        <label>Nama Clan <input name="clanName" value="${getSetting("clanName","Clan Manager")}" /></label>
+        <label>Iuran Bulanan <input type="number" name="duesAmount" value="${getSetting("duesAmount",50000)}" /></label>
+        <label>Tanggal Deadline <input type="number" name="duesDeadline" value="${getSetting("duesDeadline",10)}" /></label>
+        <label>Pengirim per Bulan <input type="number" name="sendersPerMonth" value="${getSetting("sendersPerMonth",5)}" /></label>
+        <label>Budget per Hadiah <input type="number" name="budgetPerSender" value="${getSetting("budgetPerSender",100000)}" /></label>
+        <label>Dana Cadangan <input type="number" name="reserve" value="${getSetting("reserve",500000)}" /></label>
+        <button class="btn btn-primary" type="submit">Simpan</button>
+      </form>
+    </div>
+  `;
+}
+
+// ============ OWNER: ROLES ============
+function renderRolesPage(){
+  const users=usersArray();
+  return `
+    <div class="panel">
+      <div class="panel-title">Kelola Role</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Nama</th><th>Email</th><th>Role</th><th>Ubah</th></tr></thead>
+        <tbody>
+          ${users.map(u=>`<tr>
+            <td>${u.displayName}</td>
+            <td>${u.email||"-"}</td>
+            <td><span class="badge badge-info">${u.role}</span></td>
+            <td>
+              ${u.uid===state.user.uid?"-":`
+                <select data-action="change-role" data-uid="${u.uid}">
+                  <option value="member" ${u.role==="member"?"selected":""}>Member</option>
+                  <option value="leader" ${u.role==="leader"?"selected":""}>Leader</option>
+                </select>
+              `}
+            </td>
+          </tr>`).join("")}
+        </tbody>
+      </table></div>
+    </div>
+  `;
+}
+
+// ============ MEMBER: DASHBOARD ============
+function renderMemberDashboard(){
+  const u=state.profile;
+  const mk=monthKey();
+  const st=paymentStatus(u.uid,mk);
+  const dues=getDuesForMonth(mk);
+  const rot=state.data.rotations?.[mk];
+  const myRot=(rot?.senders||[]).find(s=>s.uid===u.uid);
+  const {saldo:bal}=saldo();
+  const anns=Object.entries(state.data.announcements||{}).map(([id,a])=>({id,...a})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,3);
+  return `
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">Status Iuran ${monthLabel(mk)}</div><div class="stat-value">${badgeStatus(st)}</div></div>
+      <div class="stat-card"><div class="stat-label">Tagihan</div><div class="stat-value primary">${dues?rupiah(dues.amount):"-"}</div></div>
+      <div class="stat-card"><div class="stat-label">Giliran Giveaway</div><div class="stat-value ${myRot?"success":""}">${myRot?"Ya 🎁":"Tidak"}</div></div>
+      <div class="stat-card"><div class="stat-label">Saldo Kas Clan</div><div class="stat-value success">${rupiah(bal)}</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Pengumuman Terbaru</div>
+      ${anns.length?anns.map(a=>`<div style="border-bottom:1px solid var(--border);padding:8px 0;"><b>${a.title}</b><p class="small muted">${a.content}</p></div>`).join(""):`<p class="muted small">Tidak ada pengumuman.</p>`}
+    </div>
+  `;
+}
+
+// ============ MEMBER: BILLS ============
+function renderMyBills(){
+  const u=state.profile; const mk=monthKey();
+  const p=getPaymentsForMonth(mk).find(x=>x.uid===u.uid);
+  const st=paymentStatus(u.uid,mk);
+  const dues=getDuesForMonth(mk);
+  return `
+    <div class="panel">
+      <div class="panel-title">Iuran ${monthLabel(mk)}</div>
+      <p class="small" style="margin:8px 0;">Nominal: <b>${dues?rupiah(dues.amount):"-"}</b> · Status: ${badgeStatus(st)}</p>
+      ${st==="unpaid"||st==="rejected"?`
+        <form id="payForm" style="display:grid;gap:10px;max-width:400px;">
+          <label>Upload Bukti (JPG/PNG max 500KB) <input type="file" id="payProof" accept="image/*" required /></label>
+          <button class="btn btn-primary" type="submit">Kirim Bukti Pembayaran</button>
+        </form>`: st==="pending"?`<p class="muted">Menunggu verifikasi Leader.</p>`: `<p class="badge badge-success">Lunas ✓</p>`}
+    </div>
+  `;
+}
+
+// ============ MEMBER: MY GIVEAWAY ============
+function renderMyGiveaway(){
+  const u=state.profile;
+  const year=new Date().getFullYear();
+  return `
+    <div class="panel">
+      <div class="panel-title">Jadwal Giveaway Saya</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Bulan</th><th>Status Giliran</th></tr></thead>
+        <tbody>
+          ${Array.from({length:12},(_,i)=>{
+            const mk=`${year}-${String(i+1).padStart(2,"0")}`;
+            const r=state.data.rotations?.[mk];
+            const mine=(r?.senders||[]).some(s=>s.uid===u.uid);
+            return `<tr><td>${monthLabel(mk)}</td><td>${mine?'<span class="badge badge-success">🎁 Giliran</span>':"-"}</td></tr>`;
+          }).join("")}
+        </tbody>
+      </table></div>
+    </div>
+  `;
+}
+
+// ============ MEMBER: PROFILE ============
+function renderProfile(){
+  const u=state.profile;
+  return `
+    <div class="panel">
+      <div class="panel-title">Profil Saya</div>
+      <form id="profileForm" style="display:grid;gap:12px;max-width:480px;margin-top:12px;">
+        <label>Nama Tampilan <input name="displayName" value="${u.displayName||""}" required minlength="2" /></label>
+        <label>Username Game/Discord <input name="usernameGame" value="${u.usernameGame||""}" /></label>
+        <button class="btn btn-primary" type="submit">Simpan</button>
+      </form>
+      <p class="muted small" style="margin-top:12px;">Role: <b>${u.role}</b> · Status: ${u.membershipStatus}</p>
+    </div>
+  `;
+              }
+  // ============ BIND ACTIONS ============
+function bindActions(){
+  // Tombol umum
+  $$("[data-action]").forEach(el=>{
+    const action=el.dataset.action;
+    el.onclick=()=>handleAction(action,el);
+  });
+
+  // Form Settings
+  const sf=$("#settingsForm");
+  if(sf) sf.onsubmit=async e=>{
+    e.preventDefault();
+    const fd=new FormData(sf);
+    const payload={};
+    for(const [k,v] of fd.entries()) payload[k]=isNaN(v)||v===""?v:Number(v);
+    await set(ref(db,`${ROOT}/settings/main`),payload);
+    toast("Pengaturan disimpan");
+  };
+
+  // Form Profile
+  const pf=$("#profileForm");
+  if(pf) pf.onsubmit=async e=>{
+    e.preventDefault();
+    const fd=new FormData(pf);
+    await update(ref(db,`${ROOT}/users/${state.user.uid}`),{
+      displayName:String(fd.get("displayName")).trim(),
+      usernameGame:String(fd.get("usernameGame")).trim()
+    });
+    toast("Profil diperbarui");
+  };
+
+  // Form Bayar Iuran
+  const payF=$("#payForm");
+  if(payF) payF.onsubmit=async e=>{
+    e.preventDefault();
+    const file=$("#payProof").files[0];
+    if(!file){ toast("Pilih file bukti","error"); return; }
+    try{
+      const b64=await fileToBase64(file);
+      const mk=monthKey();
+      const dues=getDuesForMonth(mk)||{amount:getSetting("duesAmount",50000)};
+      const id=push(ref(db,`${ROOT}/payments`)).key;
+      await set(ref(db,`${ROOT}/payments/${id}`),{
+        id, uid:state.user.uid, displayName:state.profile.displayName,
+        month:mk, amount:Number(dues.amount||0), proof:b64,
+        status:"pending", createdAt:Date.now()
+      });
+      toast("Bukti terkirim, menunggu verifikasi");
+    }catch(err){ toast(err.message,"error"); }
+  };
+}
+
+// ============ HANDLE ACTION ============
+async function handleAction(action,el){
+  const uid=el.dataset.uid, id=el.dataset.id;
+
+  if(action==="add-member") return addMemberModal();
+  if(action==="edit-member") return editMemberModal(uid);
+  if(action==="toggle-member") return toggleMember(uid);
+  if(action==="approve-join") return approveJoin(uid,true);
+  if(action==="reject-join") return approveJoin(uid,false);
+  if(action==="create-dues") return createDuesModal();
+  if(action==="verify-pay") return verifyPayment(id,true);
+  if(action==="reject-pay") return verifyPayment(id,false);
+  if(action==="add-tx") return addTransactionModal();
+  if(action==="add-giveaway") return addGiveawayModal();
+  if(action==="edit-giveaway") return editGiveawayModal(id);
+  if(action==="done-giveaway") return doneGiveaway(id);
+  if(action==="gen-rotation") return generateRotation();
+  if(action==="add-announce") return addAnnounceModal();
+  if(action==="del-announce") return deleteAnnounce(id);
+  if(action==="change-role") return changeRoleSelect(el);
+}
+
+// ============ MEMBER ============
+function addMemberModal(){
+  openModal("Tambah Member",`
+    <form>
+      <label>Nama Tampilan <input name="displayName" required minlength="2" /></label>
+      <label>Username Game/Discord <input name="usernameGame" required minlength="2" /></label>
+      <label>Email (untuk login) <input name="email" type="email" required /></label>
+      <label>Password Awal (min 6) <input name="password" type="password" required minlength="6" /></label>
+      <label>Role <select name="role"><option value="member">Member</option><option value="leader">Leader</option></select></label>
+      <button class="btn btn-primary btn-block" type="submit">Simpan</button>
+    </form>
+  `,async fd=>{
+    const email=fd.get("email").trim(), pass=fd.get("password");
+    // Buat akun Firebase Auth untuk member baru
+    const { createUserWithEmailAndPassword: create } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+    const cred=await create(auth,email,pass);
+    await set(ref(db,`${ROOT}/users/${cred.user.uid}`),{
+      email, displayName:fd.get("displayName").trim(),
+      usernameGame:fd.get("usernameGame").trim(),
+      role:fd.get("role"), status:"active", membershipStatus:"active",
+      createdAt:Date.now()
+    });
+    closeModal(); toast("Member ditambahkan");
+  });
+}
+
+function editMemberModal(uid){
+  const u=state.data.users[uid];
+  if(!u) return;
+  openModal("Edit Member",`
+    <form>
+      <label>Nama Tampilan <input name="displayName" value="${u.displayName||""}" required /></label>
+      <label>Username <input name="usernameGame" value="${u.usernameGame||""}" /></label>
+      <button class="btn btn-primary btn-block" type="submit">Simpan</button>
+    </form>
+  `,async fd=>{
+    await update(ref(db,`${ROOT}/users/${uid}`),{
+      displayName:fd.get("displayName").trim(),
+      usernameGame:fd.get("usernameGame").trim()
+    });
+    closeModal(); toast("Member diperbarui");
+  });
+}
+
+async function toggleMember(uid){
+  const u=state.data.users[uid];
+  if(!u) return;
+  const newStatus=u.status==="inactive"?"active":"inactive";
+  if(!confirm(`Ubah status ${u.displayName} menjadi ${newStatus}?`)) return;
+  await update(ref(db,`${ROOT}/users/${uid}`),{status:newStatus});
+  toast("Status diubah");
+}
+
+async function approveJoin(uid, approve){
+  const req=state.data.joinRequests[uid];
+  if(!req) return;
+  if(!confirm(`${approve?"Setujui":"Tolak"} permintaan ${req.displayName}?`)) return;
+  const updates={};
+  updates[`${ROOT}/joinRequests/${uid}/status`]=approve?"approved":"rejected";
+  updates[`${ROOT}/users/${uid}/membershipStatus`]=approve?"active":"rejected";
+  await update(ref(db),updates);
+  toast(approve?"Disetujui":"Ditolak");
+}
+
+// ============ IURAN ============
+function createDuesModal(){
+  const mk=monthKey();
+  const defAmount=getSetting("duesAmount",50000);
+  const defDeadline=getSetting("duesDeadline",10);
+  const dd=`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,"0")}-${String(defDeadline).padStart(2,"0")}`;
+  openModal(`Buat Tagihan ${monthLabel(mk)}`,`
+    <form>
+      <label>Nominal <input type="number" name="amount" value="${defAmount}" min="1000" required /></label>
+      <label>Deadline <input type="date" name="deadline" value="${dd}" required /></label>
+      <button class="btn btn-primary btn-block" type="submit">Simpan</button>
+    </form>
+  `,async fd=>{
+    const deadline=new Date(fd.get("deadline")).getTime();
+    await set(ref(db,`${ROOT}/dues/${mk}`),{
+      amount:Number(fd.get("amount")), deadline, createdAt:Date.now(), by:state.profile.displayName
+    });
+    closeModal(); toast("Tagihan dibuat");
+  });
+}
+
+async function verifyPayment(paymentId, approve){
+  const p=state.data.payments[paymentId];
+  if(!p) return;
+  if(!confirm(`${approve?"Setujui":"Tolak"} pembayaran ${p.displayName} ${rupiah(p.amount)}?`)) return;
+  const updates={};
+  updates[`${ROOT}/payments/${paymentId}/status`]=approve?"approved":"rejected";
+  updates[`${ROOT}/payments/${paymentId}/verifiedAt`]=Date.now();
+  updates[`${ROOT}/payments/${paymentId}/verifiedBy`]=state.profile.displayName;
+
+  // Jika approve → buat transaksi (atomik dengan update multi-path)
+  if(approve){
+    const txId=push(ref(db,`${ROOT}/transactions`)).key;
+    updates[`${ROOT}/transactions/${txId}`]={
+      id:txId, type:"income", amount:Number(p.amount),
+      description:`Iuran ${p.month} - ${p.displayName}`,
+      status:"confirmed", refType:"payment", refId:paymentId,
+      createdAt:Date.now(), by:state.profile.displayName
+    };
+  }
+  await update(ref(db),updates);
+  toast(approve?"Pembayaran disetujui":"Pembayaran ditolak");
+}
+
+// ============ KEUANGAN ============
+function addTransactionModal(){
+  openModal("Tambah Transaksi",`
+    <form>
+      <label>Jenis <select name="type"><option value="income">Pemasukan</option><option value="expense">Pengeluaran</option></select></label>
+      <label>Nominal <input type="number" name="amount" min="1000" required /></label>
+      <label>Keterangan <input name="description" required /></label>
+      <button class="btn btn-primary btn-block" type="submit">Simpan</button>
+    </form>
+  `,async fd=>{
+    const id=push(ref(db,`${ROOT}/transactions`)).key;
+    await set(ref(db,`${ROOT}/transactions/${id}`),{
+      id, type:fd.get("type"), amount:Number(fd.get("amount")),
+      description:fd.get("description").trim(), status:"confirmed",
+      createdAt:Date.now(), by:state.profile.displayName
+    });
+    closeModal(); toast("Transaksi disimpan");
+  });
+}
+
+// ============ GIVEAWAY ============
+function addGiveawayModal(){
+  const mk=monthKey();
+  const active=activeMembers();
+  const perMonth=getSetting("sendersPerMonth",5);
+  const budget=getSetting("budgetPerSender",100000);
+  const defaultSenders=active.slice(0,perMonth).map(u=>u.uid);
+  openModal("Buat Giveaway",`
+    <form>
+      <label>Nama Kegiatan <input name="name" required /></label>
+      <label>Bulan <input type="month" name="month" value="${mk}" required /></label>
+      <label>Budget Total <input type="number" name="budget" value="${perMonth*budget}" required /></label>
+      <label>Pilih Pengirim (Ctrl+klik untuk multi)
+        <select name="senders" multiple size="${Math.min(active.length,6)}" required>
+          ${active.map(u=>`<option value="${u.uid}" ${defaultSenders.includes(u.uid)?"selected":""}>${u.displayName}</option>`).join("")}
+        </select>
+      </label>
+      <button class="btn btn-primary btn-block" type="submit">Simpan</button>
+    </form>
+  `,async fd=>{
+    const sendersUid=[...fd.getAll("senders")];
+    const senders=sendersUid.map(uid=>({uid, name:state.data.users[uid]?.displayName||"-"}));
+    const id=push(ref(db,`${ROOT}/giveaways`)).key;
+    await set(ref(db,`${ROOT}/giveaways/${id}`),{
+      id, name:fd.get("name").trim(), month:fd.get("month"),
+      budget:Number(fd.get("budget")), senders, status:"planned",
+      createdAt:Date.now(), by:state.profile.displayName
+    });
+    closeModal(); toast("Giveaway dibuat");
+  });
+}
+
+function editGiveawayModal(id){
+  const g=state.data.giveaways[id];
+  if(!g) return;
+  openModal("Edit Giveaway",`
+    <form>
+      <label>Nama <input name="name" value="${g.name||""}" required /></label>
+      <label>Status
+        <select name="status">
+          ${["planned","ready","ongoing","completed","postponed","cancelled"].map(s=>`<option value="${s}" ${g.status===s?"selected":""}>${s}</option>`).join("")}
+        </select>
+      </label>
+      <button class="btn btn-primary btn-block" type="submit">Simpan</button>
+    </form>
+  `,async fd=>{
+    await update(ref(db,`${ROOT}/giveaways/${id}`),{
+      name:fd.get("name").trim(), status:fd.get("status")
+    });
+    closeModal(); toast("Giveaway diperbarui");
+  });
+}
+
+async function doneGiveaway(id){
+  const g=state.data.giveaways[id];
+  if(!g) return;
+  if(!confirm(`Tandai giveaway "${g.name}" selesai? Ini akan mencatat pengeluaran ${rupiah(g.budget)}.`)) return;
+  const updates={};
+  updates[`${ROOT}/giveaways/${id}/status`]="completed";
+  updates[`${ROOT}/giveaways/${id}/completedAt`]=Date.now();
+  const txId=push(ref(db,`${ROOT}/transactions`)).key;
+  updates[`${ROOT}/transactions/${txId}`]={
+    id:txId, type:"expense", amount:Number(g.budget),
+    description:`Giveaway ${g.name} (${g.month})`,
+    status:"confirmed", refType:"giveaway", refId:id,
+    createdAt:Date.now(), by:state.profile.displayName
+  };
+  await update(ref(db),updates);
+  toast("Giveaway selesai, pengeluaran dicatat");
+}
+
+// ============ ROTASI ============
+async function generateRotation(){
+  const active=activeMembers();
+  if(active.length===0){ toast("Belum ada member aktif","error"); return; }
+  const perMonth=Number(getSetting("sendersPerMonth",5));
+  const year=new Date().getFullYear();
+  if(!confirm(`Generate rotasi 12 bulan ${year} untuk ${active.length} member aktif?`)) return;
+  const updates={};
+  let idx=0;
+  for(let m=1;m<=12;m++){
+    const mk=`${year}-${String(m).padStart(2,"0")}`;
+    const senders=[];
+    for(let i=0;i<perMonth && i<active.length;i++){
+      const u=active[idx%active.length];
+      senders.push({uid:u.uid, name:u.displayName});
+      idx++;
+    }
+    updates[`${ROOT}/rotations/${mk}`]={month:mk, senders, generatedAt:Date.now()};
+  }
+  await update(ref(db),updates);
+  toast("Rotasi digenerate");
+}
+
+// ============ PENGUMUMAN ============
+function addAnnounceModal(){
+  openModal("Buat Pengumuman",`
+    <form>
+      <label>Judul <input name="title" required /></label>
+      <label>Isi <textarea name="content" rows="4" required></textarea></label>
+      <button class="btn btn-primary btn-block" type="submit">Kirim</button>
+    </form>
+  `,async fd=>{
+    const id=push(ref(db,`${ROOT}/announcements`)).key;
+    await set(ref(db,`${ROOT}/announcements/${id}`),{
+      id, title:fd.get("title").trim(), content:fd.get("content").trim(),
+      by:state.profile.displayName, createdAt:Date.now()
+    });
+    closeModal(); toast("Pengumuman dibuat");
+  });
+}
+
+async function deleteAnnounce(id){
+  if(!confirm("Hapus pengumuman ini?")) return;
+  await remove(ref(db,`${ROOT}/announcements/${id}`));
+  toast("Pengumuman dihapus");
+}
+
+// ============ ROLE ============
+async function changeRoleSelect(sel){
+  if(state.profile.role!=="owner"){ toast("Hanya Owner yang bisa ubah role","error"); return; }
+  const uid=sel.dataset.uid, newRole=sel.value;
+  if(!confirm(`Ubah role menjadi ${newRole}?`)){ renderPage(); return; }
+  await update(ref(db,`${ROOT}/users/${uid}`),{role:newRole});
+  toast("Role diubah");
+}
+</script>
+</body>
+</html>
